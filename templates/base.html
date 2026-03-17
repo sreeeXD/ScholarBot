@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ScholarPath – AI Scholarship Finder{% endblock %}</title>
+  <meta name="description" content="Use our AI-powered eligibility checker to discover scholarships that match your profile instantly." />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet" crossorigin="anonymous" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Navbar ───────────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top glass-nav">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+      <span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span>
+      <span class="fw-700">Scholar<span class="text-primary">Path</span></span>
+    </a>
+    <button class="navbar-toggler border-0" type="button"
+            data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}"
+             href="{{ url_for('index') }}">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'chat' %}active{% endif %}"
+             href="{{ url_for('chat') }}">Chat with ScholarBot</a>
+        </li>
+        <li class="nav-item ms-lg-2">
+          <a class="btn btn-primary btn-sm rounded-pill px-3" href="{{ url_for('chat') }}">
+            <i class="bi bi-search me-1"></i> Find Scholarships
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Page Content ──────────────────────────────────────────────────────────── -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────────── -->
+<footer class="footer py-5 mt-auto">
+  <div class="container">
+    <div class="row gy-4">
+      <div class="col-md-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="brand-icon-sm"><i class="bi bi-mortarboard-fill"></i></span>
+          <span class="fw-700 fs-5">Scholar<span class="text-primary">Path</span></span>
+        </div>
+        <p class="text-secondary small">
+          AI-powered scholarship matching for Indian students.
+          Find your perfect scholarship in seconds.
+        </p>
+      </div>
+      <div class="col-md-4">
+        <h6 class="fw-600 mb-3">Quick Links</h6>
+        <ul class="list-unstyled small">
+          <li><a href="{{ url_for('index') }}" class="footer-link">Home</a></li>
+          <li><a href="{{ url_for('chat') }}" class="footer-link">Check Eligibility</a></li>
+        </ul>
+      </div>
+      <div class="col-md-4">
+        <h6 class="fw-600 mb-3">Important Links</h6>
+        <ul class="list-unstyled small">
+          <li><a href="https://scholarships.gov.in" target="_blank" class="footer-link">National Scholarship Portal <i class="bi bi-box-arrow-up-right"></i></a></li>
+          <li><a href="https://telanganaepass.cgg.gov.in" target="_blank" class="footer-link">TS ePASS Portal <i class="bi bi-box-arrow-up-right"></i></a></li>
+          <li><a href="https://tsche.ac.in" target="_blank" class="footer-link">TSCHE Scholarships <i class="bi bi-box-arrow-up-right"></i></a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-secondary my-4" />
+    <p class="text-center text-secondary small mb-0">
+      &copy; 2026 ScholarPath &nbsp;|&nbsp; Built with
+      <i class="bi bi-heart-fill text-danger small"></i> for Indian Students
+    </p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

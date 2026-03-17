@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+{% block title %}ScholarBot – AI Scholarship Chat{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside class="chat-sidebar d-none d-lg-flex flex-column">
+    <div class="sidebar-header px-4 py-3">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span>
+        <span class="fw-700">Scholar<span class="text-primary">Bot</span></span>
+      </div>
+      <p class="text-secondary small mb-0">AI Scholarship Assistant</p>
+    </div>
+
+    <div class="sidebar-body px-4 py-3 flex-grow-1">
+      <button id="newChatBtn" class="btn btn-outline-secondary w-100 rounded-3 mb-4 new-chat-btn">
+        <i class="bi bi-plus-circle me-2"></i> New Conversation
+      </button>
+
+      <div class="sidebar-section-label">HOW IT WORKS</div>
+      <div class="sidebar-info-items mt-2">
+        <div class="sidebar-item">
+          <i class="bi bi-chat-text text-primary"></i>
+          <span>Describe yourself naturally</span>
+        </div>
+        <div class="sidebar-item">
+          <i class="bi bi-cpu text-primary"></i>
+          <span>AI extracts your details</span>
+        </div>
+        <div class="sidebar-item">
+          <i class="bi bi-award text-primary"></i>
+          <span>Get matched scholarships instantly</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section-label mt-4">WHAT I CHECK</div>
+      <div class="sidebar-tags mt-2">
+        <span class="sidebar-tag">GPA</span>
+        <span class="sidebar-tag">Income</span>
+        <span class="sidebar-tag">Course</span>
+        <span class="sidebar-tag">State</span>
+        <span class="sidebar-tag">Category</span>
+        <span class="sidebar-tag">Gender</span>
+      </div>
+
+      <div class="sidebar-section-label mt-4">TELANGANA SCHEMES</div>
+      <div class="sidebar-info-items mt-2">
+        <div class="sidebar-item">
+          <i class="bi bi-star-fill text-warning"></i>
+          <span>TS ePASS (SC/ST/OBC)</span>
+        </div>
+        <div class="sidebar-item">
+          <i class="bi bi-star-fill text-warning"></i>
+          <span>Pragati (Women / B.Tech)</span>
+        </div>
+        <div class="sidebar-item">
+          <i class="bi bi-star-fill text-warning"></i>
+          <span>Ambedkar Overseas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer px-4 py-3">
+      <div class="text-secondary" style="font-size:0.75rem;">
+        <i class="bi bi-shield-check text-success me-1"></i>
+        No data stored &nbsp;|&nbsp;
+        <i class="bi bi-lightning text-warning me-1"></i>
+        Instant AI matching
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Chat Area ──────────────────────────────────────────────────── -->
+  <main class="chat-main d-flex flex-column">
+
+    <!-- Mobile top bar -->
+    <div class="chat-topbar d-lg-none d-flex align-items-center justify-content-between px-3 py-2">
+      <div class="d-flex align-items-center gap-2">
+        <span class="brand-icon"><i class="bi bi-mortarboard-fill"></i></span>
+        <span class="fw-700">Scholar<span class="text-primary">Bot</span></span>
+      </div>
+      <button id="newChatBtnMobile" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+        <i class="bi bi-plus-circle me-1"></i> New
+      </button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="chat-progress-bar">
+      <div class="chat-progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages injected by JavaScript -->
+    </div>
+
+    <!-- Typing Indicator (hidden by default) -->
+    <div class="typing-indicator-wrapper d-none" id="typingIndicator">
+      <div class="bot-avatar-sm">
+        <i class="bi bi-mortarboard-fill"></i>
+      </div>
+      <div class="typing-bubble">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Fields collected indicator (hidden, value used by JS) -->
+    <div id="fieldsCollected" data-count="0" style="display:none"></div>
+
+    <!-- Input Bar -->
+    <div class="chat-input-bar">
+      <div class="chat-input-inner">
+        <textarea
+          id="userInput"
+          class="chat-textarea"
+          rows="1"
+          placeholder="Tell me about yourself… (name, course, GPA, income, category, gender, state)"
+          autocomplete="off"
+        ></textarea>
+        <button id="sendBtn" class="chat-send-btn" title="Send">
+          <i class="bi bi-arrow-up"></i>
+        </button>
+      </div>
+      <p class="chat-disclaimer">
+        ScholarBot uses a Rule-Based AI engine. Results are for guidance only — always verify on official portals.
+      </p>
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ScholarBot Chat Engine
+═══════════════════════════════════════════════════════════════════════════ */
+
+const chatMessages    = document.getElementById('chatMessages');
+const userInput       = document.getElementById('userInput');
+const sendBtn         = document.getElementById('sendBtn');
+const typingIndicator = document.getElementById('typingIndicator');
+const progressFill    = document.getElementById('progressFill');
+const newChatBtn      = document.getElementById('newChatBtn');
+const newChatBtnMob   = document.getElementById('newChatBtnMobile');
+
+const TOTAL_FIELDS = 8;
+let isWaiting = false;
+
+// ── Markdown-lite renderer ────────────────────────────────────────────────
+function renderMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+    .replace(/\n/g,            '<br>');
+}
+
+// ── Append a message bubble ───────────────────────────────────────────────
+function appendMessage(role, content, animate = true) {
+  const wrap = document.createElement('div');
+  wrap.className = `chat-message-row ${role}-row ${animate ? 'msg-animate' : ''}`;
+
+  if (role === 'bot') {
+    wrap.innerHTML = `
+      <div class="bot-avatar-sm">
+        <i class="bi bi-mortarboard-fill"></i>
+      </div>
+      <div class="message-bubble bot-bubble">${renderMarkdown(content)}</div>
+    `;
+  } else {
+    wrap.innerHTML = `
+      <div class="message-bubble user-bubble">${renderMarkdown(content)}</div>
+      <div class="user-avatar-sm"><i class="bi bi-person-fill"></i></div>
+    `;
+  }
+
+  chatMessages.appendChild(wrap);
+  scrollToBottom();
+}
+
+// ── Append scholarship result cards ──────────────────────────────────────
+function appendResults(matches) {
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-message-row bot-row msg-animate';
+
+  if (matches.length === 0) {
+    wrap.innerHTML = `
+      <div class="bot-avatar-sm"><i class="bi bi-mortarboard-fill"></i></div>
+      <div class="message-bubble bot-bubble results-bubble">
+        <div class="no-match-state">
+          <i class="bi bi-search display-4 text-secondary d-block mb-3"></i>
+          <div class="fw-600">No scholarships matched your profile.</div>
+          <div class="text-secondary small mt-1">Try restarting and adjusting your details.</div>
+        </div>
+      </div>
+    `;
+  } else {
+    const cards = matches.map(m => {
+      const s = m.scholarship;
+      const reasons = m.reasons.map(r =>
+        `<div class="reason-row"><i class="bi bi-check2 text-success"></i><span>${renderMarkdown(r)}</span></div>`
+      ).join('');
+      return `
+        <div class="result-card-chat">
+          <div class="rcc-header d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-700 fs-6">${s.name}</div>
+              <div class="text-secondary small">${s.description || ''}</div>
+            </div>
+            <span class="eligible-badge">✓ Eligible</span>
+          </div>
+          <div class="rcc-reasons">
+            <div class="reasons-label"><i class="bi bi-cpu-fill me-1"></i>Matched Because:</div>
+            ${reasons}
+          </div>
+          <div class="rcc-footer d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
+            <div class="d-flex flex-wrap gap-2">
+              ${s.amount ? `<span class="rcc-meta"><i class="bi bi-currency-rupee"></i>${s.amount}</span>` : ''}
+              ${s.deadline ? `<span class="rcc-meta"><i class="bi bi-calendar-event"></i>${s.deadline}</span>` : ''}
+              ${s.required_state && s.required_state !== 'Any' ? `<span class="rcc-meta rcc-meta-state"><i class="bi bi-geo-alt"></i>${s.required_state}</span>` : ''}
+            </div>
+            ${s.apply_link ? `<a href="${s.apply_link}" target="_blank" class="btn btn-primary btn-sm rounded-pill px-3 btn-glow">Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i></a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="bot-avatar-sm"><i class="bi bi-mortarboard-fill"></i></div>
+      <div class="message-bubble bot-bubble results-bubble">
+        <div class="results-grid">${cards}</div>
+        <div class="restart-nudge mt-4">
+          <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="restartBtn">
+            <i class="bi bi-arrow-repeat me-1"></i> Start Over
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  chatMessages.appendChild(wrap);
+  scrollToBottom();
+
+  // Bind restart
+  const rb = document.getElementById('restartBtn');
+  if (rb) rb.addEventListener('click', doRestart);
+}
+
+// ── (No option chips in free-form mode) ──────────────────────────────────
+
+// ── Typing indicator ──────────────────────────────────────────────────────
+function showTyping()  { typingIndicator.classList.remove('d-none'); scrollToBottom(); }
+function hideTyping()  { typingIndicator.classList.add('d-none'); }
+
+// ── Progress (fields collected 0–8) ──────────────────────────────────────
+function updateProgress(fieldsCollected) {
+  const pct = Math.min(100, Math.round((fieldsCollected / TOTAL_FIELDS) * 100));
+  progressFill.style.width = pct + '%';
+}
+
+// ── Auto-resize textarea ──────────────────────────────────────────────────
+userInput.addEventListener('input', () => {
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
+});
+
+// ── Scroll ────────────────────────────────────────────────────────────────
+function scrollToBottom() {
+  setTimeout(() => chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' }), 60);
+}
+
+// ── Send message ──────────────────────────────────────────────────────────
+async function sendMessage(text) {
+  const msg = (text || userInput.value).trim();
+  if (!msg || isWaiting) return;
+
+  isWaiting = true;
+  userInput.value = '';
+  userInput.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  appendMessage('user', msg);
+  showTyping();
+
+  try {
+    const res  = await fetch('/chat/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg }),
+    });
+    const data = await res.json();
+
+    await delay(600 + Math.random() * 500);
+    hideTyping();
+
+    if (data.type === 'error') {
+      appendMessage('bot', data.bot_message);
+    } else if (data.type === 'restart') {
+      chatMessages.innerHTML = '';
+      updateProgress(0);
+      appendMessage('bot', data.bot_message);
+    } else if (data.type === 'results') {
+      appendMessage('bot', data.bot_message);
+      await delay(400);
+      appendResults(data.results || []);
+      updateProgress(TOTAL_FIELDS);
+      disableInput('Done! Click "New Conversation" to search again.');
+    } else {
+      // question — free-form follow-up
+      appendMessage('bot', data.bot_message);
+      updateProgress(data.fields_collected || 0);
+    }
+  } catch {
+    hideTyping();
+    appendMessage('bot', '⚠️ Something went wrong. Please refresh and try again.');
+  }
+
+  isWaiting = false;
+  sendBtn.disabled = false;
+  userInput.focus();
+}
+
+function disableInput(placeholder) {
+  userInput.disabled = true;
+  userInput.placeholder = placeholder;
+  sendBtn.disabled = true;
+}
+
+function enableInput() {
+  userInput.disabled = false;
+  userInput.placeholder = 'Tell me about yourself… (name, course, GPA, income, category, gender, state)';
+  sendBtn.disabled = false;
+}
+
+function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+// ── Restart ───────────────────────────────────────────────────────────────
+async function doRestart() {
+  chatMessages.innerHTML = '';
+  enableInput();
+  updateProgress(0);
+  isWaiting = false;
+
+  try {
+    showTyping();
+    const res  = await fetch('/chat/restart', { method: 'POST' });
+    const data = await res.json();
+    await delay(700);
+    hideTyping();
+    appendMessage('bot', data.bot_message);
+  } catch {
+    hideTyping();
+    appendMessage('bot', '⚠️ Failed to restart. Please refresh.');
+  }
+}
+
+if (newChatBtn)    newChatBtn.addEventListener('click', doRestart);
+if (newChatBtnMob) newChatBtnMob.addEventListener('click', doRestart);
+
+// ── Send on Enter (Shift+Enter = newline) ─────────────────────────────────
+userInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+sendBtn.addEventListener('click', () => sendMessage());
+
+// ── Boot: fetch first bot message ─────────────────────────────────────────
+(async function boot() {
+  try {
+    showTyping();
+    const res  = await fetch('/chat/start');
+    const data = await res.json();
+    await delay(900);
+    hideTyping();
+    appendMessage('bot', data.bot_message);
+    updateProgress(0);
+  } catch {
+    hideTyping();
+    appendMessage('bot', '⚠️ Failed to connect. Please refresh the page.');
+  }
+})();
+</script>
+{% endblock %}

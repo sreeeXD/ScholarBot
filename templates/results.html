@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Your Scholarship Matches – ScholarPath{% endblock %}
+
+{% block content %}
+<section class="results-section py-6">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+      {% if matches %}
+        <span class="badge badge-success-glow mb-3 px-3 py-2 rounded-pill">
+          <i class="bi bi-check-circle-fill me-1"></i> Analysis Complete
+        </span>
+        <h1 class="fw-800 fs-1">
+          🎉 {{ matches|length }} Scholarship{{ 's' if matches|length != 1 }}
+          <span class="gradient-text">Found!</span>
+        </h1>
+        <p class="text-secondary">
+          Hey <strong>{{ student.name }}</strong>, based on your profile, you are eligible for the following scholarships.
+        </p>
+      {% else %}
+        <span class="badge badge-warn-glow mb-3 px-3 py-2 rounded-pill">
+          <i class="bi bi-exclamation-circle me-1"></i> No Matches Found
+        </span>
+        <h1 class="fw-800 fs-1">
+          No Scholarships <span class="gradient-text-warn">Matched</span>
+        </h1>
+        <p class="text-secondary">
+          Sorry {{ student.name }}, no scholarships matched your current profile.
+          Try adjusting your details or check back as new scholarships are added.
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Profile Summary Strip -->
+    <div class="profile-strip glass-card rounded-4 p-3 mb-5">
+      <div class="row row-cols-2 row-cols-sm-3 row-cols-md-6 g-2 text-center justify-content-center">
+        <div class="col">
+          <div class="profile-chip">
+            <div class="text-secondary small">Course</div>
+            <div class="fw-600">{{ student.course }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="profile-chip">
+            <div class="text-secondary small">GPA</div>
+            <div class="fw-600">{{ student.gpa }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="profile-chip">
+            <div class="text-secondary small">Income</div>
+            <div class="fw-600">₹{{ '{:,}'.format(student.income|int) }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="profile-chip">
+            <div class="text-secondary small">Category</div>
+            <div class="fw-600">{{ student.category }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="profile-chip">
+            <div class="text-secondary small">Gender</div>
+            <div class="fw-600">{{ student.gender }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="profile-chip">
+            <div class="text-secondary small">State</div>
+            <div class="fw-600">{{ student.state }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    {% if matches %}
+    <div class="row g-4">
+      {% for m in matches %}
+      {% set s = m.scholarship %}
+      <div class="col-md-6 col-xl-4">
+        <div class="result-card glass-card rounded-4 p-4 h-100 d-flex flex-column">
+
+          <!-- Card Top -->
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="icon-circle-lg bg-primary-soft">
+              <i class="bi bi-mortarboard-fill text-primary fs-3"></i>
+            </div>
+            <span class="badge bg-success-soft text-success rounded-pill px-3 py-2">
+              <i class="bi bi-check-circle me-1"></i> Eligible
+            </span>
+          </div>
+
+          <!-- Name -->
+          <h5 class="fw-700 mb-1">{{ s.name }}</h5>
+          <p class="text-secondary small mb-3">{{ s.description }}</p>
+
+          <!-- Eligibility Reason -->
+          <div class="eligibility-reason rounded-3 p-3 mb-3">
+            <div class="fw-600 small text-primary mb-2">
+              <i class="bi bi-cpu-fill me-1"></i> Matched Because:
+            </div>
+            {% for reason in m.reasons %}
+            <div class="reason-pill">
+              <i class="bi bi-check2 text-success me-1"></i>
+              <span class="small">{{ reason }}</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Details -->
+          <div class="scholarship-meta mt-auto">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              {% if s.amount %}
+              <span class="meta-badge">
+                <i class="bi bi-currency-rupee me-1"></i>{{ s.amount }}
+              </span>
+              {% endif %}
+              {% if s.deadline %}
+              <span class="meta-badge">
+                <i class="bi bi-calendar-event me-1"></i>{{ s.deadline }}
+              </span>
+              {% endif %}
+              {% if s.required_state and s.required_state != 'Any' %}
+              <span class="meta-badge meta-badge-info">
+                <i class="bi bi-geo-alt me-1"></i>{{ s.required_state }}
+              </span>
+              {% endif %}
+            </div>
+
+            {% if s.apply_link %}
+            <a href="{{ s.apply_link }}" target="_blank"
+               class="btn btn-primary w-100 rounded-pill btn-glow">
+              <i class="bi bi-box-arrow-up-right me-2"></i> Apply Now
+            </a>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- No Results State -->
+    <div class="text-center py-5">
+      <div class="no-results-icon mb-4">
+        <i class="bi bi-search display-1 text-secondary"></i>
+      </div>
+      <h4 class="fw-700 mb-3">Tips to find more scholarships:</h4>
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <ul class="list-unstyled text-secondary text-start">
+            <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Make sure your GPA and income details are accurate.</li>
+            <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>If you're in Telangana, many state-specific options are available.</li>
+            <li class="mb-2"><i class="bi bi-arrow-right-circle text-primary me-2"></i>Check the National Scholarship Portal for more options.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="d-flex flex-wrap justify-content-center gap-3 mt-5">
+      <a href="{{ url_for('form') }}" class="btn btn-outline-primary btn-lg rounded-pill px-5">
+        <i class="bi bi-arrow-repeat me-2"></i> Check Again
+      </a>
+      <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-5">
+        <i class="bi bi-house-fill me-2"></i> Home
+      </a>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
