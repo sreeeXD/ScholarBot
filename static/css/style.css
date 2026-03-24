@@ -656,6 +656,36 @@ main { padding-top: 70px; flex: 1; position: relative; z-index: 1; }
 }
 .rcc-meta-state { color: var(--info); border-color: rgba(56,189,248,0.2); }
 
+/* Required Documents section */
+.rcc-docs {
+  background: rgba(245,158,11,0.05);
+  border: 1px solid rgba(245,158,11,0.18);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.75rem;
+}
+.rcc-docs .reasons-label { color: #fbbf24; }
+.docs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.doc-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.72);
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+  transition: background var(--transition), border-color var(--transition);
+}
+.doc-chip:hover {
+  background: rgba(245,158,11,0.15);
+  border-color: rgba(245,158,11,0.4);
+}
+
 .no-match-state { text-align: center; padding: 1rem; }
 .restart-nudge { text-align: center; }
 

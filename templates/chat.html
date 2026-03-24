@@ -203,6 +203,17 @@ function appendResults(matches) {
       const reasons = m.reasons.map(r =>
         `<div class="reason-row"><i class="bi bi-check2 text-success"></i><span>${renderMarkdown(r)}</span></div>`
       ).join('');
+
+      const rawDocs = (s.documents_required || '').trim();
+      const docsHtml = rawDocs
+        ? `<div class="rcc-docs mt-3">
+            <div class="reasons-label"><i class="bi bi-file-earmark-text me-1"></i>Required Documents:</div>
+            <div class="docs-chips mt-2">
+              ${rawDocs.split('|').map(d => `<span class="doc-chip"><i class="bi bi-paperclip me-1"></i>${d.trim()}</span>`).join('')}
+            </div>
+          </div>`
+        : '';
+
       return `
         <div class="result-card-chat">
           <div class="rcc-header d-flex justify-content-between align-items-start">
@@ -216,6 +227,7 @@ function appendResults(matches) {
             <div class="reasons-label"><i class="bi bi-cpu-fill me-1"></i>Matched Because:</div>
             ${reasons}
           </div>
+          ${docsHtml}
           <div class="rcc-footer d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
             <div class="d-flex flex-wrap gap-2">
               ${s.amount ? `<span class="rcc-meta"><i class="bi bi-currency-rupee"></i>${s.amount}</span>` : ''}

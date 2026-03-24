@@ -412,13 +412,22 @@ def extract_profile_fields(text: str, existing: dict) -> dict:
                     extracted['income'] = raw
 
     # ── Category ──────────────────────────────────────────────────────────────
+    # Year ordinal suffixes (st/nd/rd/th) must NOT be mistaken for categories.
+    # Use a negative lookbehind for digits to avoid matching "1st", "2nd" etc.
+    _YEAR_SUFFIX_RE = re.compile(r'\d(?:st|nd|rd|th)\b', re.I)
+    _tl_no_ordinals = _YEAR_SUFFIX_RE.sub('', tl)   # strip "1st", "2nd" …
+
     if 'category' not in existing:
-        cat_m = re.search(r'\b(general|obc|sc|st)\b', tl)
+        cat_m = re.search(r'\b(general|obc|sc|st)\b', _tl_no_ordinals)
         if cat_m:
             extracted['category'] = cat_m.group(1).upper()
         else:
-            for word in re.findall(r'[a-z]+', tl):
-                if len(word) >= 2:
+            # Fuzzy fallback — use longer words only (len>=4) to avoid
+            # year-suffix fragments ("st", "nd", "rd") scoring 100% against SC/ST.
+            # Also skip known stop-words and ordinal suffixes.
+            _ORDINAL_SUFFIXES = {'st', 'nd', 'rd', 'th'}
+            for word in re.findall(r'[a-z]+', _tl_no_ordinals):
+                if len(word) >= 4 and word not in _ORDINAL_SUFFIXES:
                     hit = extractOne(word, FUZZY_CATEGORY_CHOICES, scorer=ratio, score_cutoff=75)
                     if hit:
                         extracted['category'] = hit[0].upper()
